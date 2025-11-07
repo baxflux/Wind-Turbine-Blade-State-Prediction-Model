@@ -27,18 +27,21 @@ Xây dựng mô hình học máy **chẩn đoán lỗi cánh quạt turbine gió
 
 ## Cấu trúc thư mục
 
+```text
+.
 ├── data/
-│ ├── preprocessed-data/
-│ │ └── merged_wind_turbine_data.csv
-│ └── raw-data/
+│   ├── preprocessed-data/
+│   │   └── merged_wind_turbine_data.csv
+│   └── raw-data/
 ├── image/
 ├── model/
-│ ├── wind_turbine_pca.pkl
-│ ├── wind_turbine_scaler.pkl
-│ └── wind_turbine_svm_rbf_model.pkl
+│   ├── wind_turbine_pca.pkl
+│   ├── wind_turbine_scaler.pkl
+│   └── wind_turbine_svm_rbf_model.pkl
 ├── preprocessing.ipynb
 ├── README.md
 └── training.ipynb
+```
 
 ---
 
