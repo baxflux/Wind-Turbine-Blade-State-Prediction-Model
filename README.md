@@ -1,126 +1,102 @@
-# Wind Turbine Blade State Prediction Model
+<h1 align="center">
+Wind Turbine Blade State Prediction Model
+</h1>
 
-**Dự đoán tình trạng cánh quạt turbine gió (Healthy / Surface Erosion / Cracked Blade / Mass Imbalance / Twist Blade Fault) dựa trên dữ liệu rung động (vibration) và mô hình SVM-RBF.**
+<p align="center" style="color:gray;">
+(Mô hình dự đoán trạng thái cánh quạt Tuabin gió)
+</p>
 
----
+<hr>
 
-## Mục tiêu
+## GIỚI THIỆU TỔNG QUÁT
 
-Xây dựng mô hình học máy **chẩn đoán lỗi cánh quạt turbine gió** từ tín hiệu rung động (uniaxial vibration) thu thập ở các tốc độ gió khác nhau, sử dụng **SVM với kernel RBF** kết hợp **trích xuất đặc trưng miền thời gian & tần số**, **tăng cường dữ liệu**, và **PCA**.
+Đây là dự án xây dựng một mô hình máy học (Machine Learning) là SVM - Support Vector Machine, để dự đoán trạng thái của cánh quạt Tuabin gió (có 5 trạng thái, chi tiết nằm ở mục **BỘ DỮ LIỆU**) với dữ liệu học được là tín hiệu rung động của cánh quạt (Vibration Signal Data) được đo ở nhiều mức độ gió khác nhau.
 
----
+Bước đầu tiên khi xây dựng mô hình là thu thập hai đặc trưng cơ bản: `amplitude`, `wind_speed` và nhãn `label`; nhận được từ quá trình tiền xử lý (35 tập dữ liệu khác nhau được xử lý thành 1 tập dữ liệu chung có ba đặc trưng là `time`, `amplitude`, `wind_speed`, nhưng ta chỉ cần hai đặc trưng sau).
 
-## Dataset
+Tiếp theo, xử lý tập dữ liệu đã tiền xử lý thành 35 chuỗi (Sequence) ứng với 35 tập dữ liệu trên, với mỗi chuỗi chứa một ma trận 500 x 2 (500 mẫu dữ liệu với hai đặc trưng cơ bản). Vì số chuỗi khá nhỏ nên ta sẽ tăng cường số chuỗi lên gấp 50 lần, tức là sẽ có 1750 chuỗi để mô hình học được nhiều hơn. Một số phương pháp tăng cường:
 
-- **Nguồn**: [Mendeley Data – Wind Turbine Blades Fault Diagnosis based on Vibration Dataset Analysis](https://data.mendeley.com/datasets/5d7vbdp8f7/4)  
-  `DOI: 10.17632/5d7vbdp8f7.4`
-- **35 file** (CSV + XLSX), mỗi file ~500 mẫu, tần số lấy mẫu **1 kHz**
-- **5 lớp**:
-  1. `Healthy`
-  2. `Surface Erosion`
-  3. `Cracked Blade`
-  4. `Mass Imbalance`
-  5. `Twist Blade Fault`
-- Tốc độ gió: **1.3 → 5.6 m/s**
+1. Additive Gaussian Noise (Thêm nhiễu Gauss)
+2. Time Shifting (Dịch chuyển theo thời gian)
+3. Amplitude Scaling (Thay đổi biên độ)
+4. Time Reversal (Đảo ngược chuỗi thời gian)
 
----
+Khi đã tăng cường xong, tiến hành trích xuất thêm đặc trưng ứng với mỗi chuỗi (mỗi chuỗi sẽ cho ra được hai Vector `amplitude`, `wind_speed` gồm 500 giá trị). Lúc này từ một Tensor (1750, 500, 2) sẽ biến thành một ma trận 1750 x 12; tức là mỗi chuỗi sẽ có tất cả 12 đặc trưng mới, với 9 đặc trưng thuộc miền thời gian (Time-domain Features) và 3 đặc trưng thuộc miền tần số (Frequency-domain Features).
 
-## Cấu trúc thư mục
+Thông tin chi tiết về 12 đặc trưng mới:
 
-```text
-.
-├── data/
-│   ├── preprocessed-data/
-│   │   └── merged_wind_turbine_data.csv
-│   └── raw-data/
-├── image/
-├── model/
-│   ├── wind_turbine_pca.pkl
-│   ├── wind_turbine_scaler.pkl
-│   └── wind_turbine_svm_rbf_model.pkl
-├── preprocessing.ipynb
-├── README.md
-└── training.ipynb
-```
+| STT |  Loại đặc trưng  |          Tên biến           |                      Ý nghĩa                       |
+| :-: | :--------------: | :-------------------------: | :------------------------------------------------: |
+|  1  |   Time-domain    |      `mean_amplitude`       |      Giá trị trung bình của biên độ tín hiệu       |
+|  2  |   Time-domain    |       `std_amplitude`       |            Mức độ dao động của biên độ             |
+|  3  |   Time-domain    |       `max_amplitude`       |           Biên độ lớn nhất của tín hiệu            |
+|  4  |   Time-domain    |       `min_amplitude`       |           Biên độ nhỏ nhất của tín hiệu            |
+|  5  |   Time-domain    |      `skew_amplitude`       |        Độ bất đối xứng của phân bố biên độ         |
+|  6  |   Time-domain    |    `kurtosis_amplitude`     |          Độ nhọn và mức độ xuất hiện xung          |
+|  7  |   Time-domain    |      `mean_wind_speed`      |               Tốc độ gió trung bình                |
+|  8  |   Time-domain    |      `std_wind_speed`       |          Mức độ biến động của tốc độ gió           |
+|  9  |   Time-domain    | `amplitude_variation_ratio` | Mức độ biến thiên nhanh của biên độ theo thời gian |
+| 10  | Frequency-domain |         `peak_freq`         |       Tần số chiếm ưu thế trong phổ tín hiệu       |
+| 11  | Frequency-domain |      `spectral_energy`      |   Tổng năng lượng của tín hiệu trong miền tần số   |
+| 12  | Frequency-domain |     `spectral_entropy`      |        Mức độ phân tán năng lượng trong phổ        |
 
----
+Ta tiến hành chuẩn hoá (Scale) các điểm dữ liệu x trong ma trận theo công thức: x_scale = (x - mean) / std (mean và std tính theo từng cột thuộc tính); giúp mức độ ảnh hưởng của các đặc trưng là ngang nhau (với mean ≈ 0, std ≈ 1)
 
-## Thư viện sử dụng
+Sau đó đưa vào ma trận chuẩn hoá vào PCA - Principal Component Analysis để giảm chiều dữ liệu với mục tiêu là giữ được ít nhất là 95% phương sai (hay 95% thông tin của dữ liệu). Khi quá trình hoàn tất, ma trận đặc trưng ta nhận được có kích thước 1750 x 9 (12 chiều giảm xuống còn 9 chiều), với 9 cột thuộc tính hiện tại ở đây là 9 Principal Components (thành phần chính) khác nhau.
 
-- pandas: Xử lý dữ liệu bảng, đọc/ghi CSV/XLSX
-- numpy: Tính toán mảng, augmentation
-- scikit-learn: SVM, PCA, StandardScaler, GridSearchCV, metrics
-- scipy: FFT, stats (skew, kurtosis)
-- matplotlib & seaborn: Vẽ biểu đồ (learning curve, confusion matrix)
-- joblib: Lưu/load mô hình
-- openpyxl: Hỗ trợ đọc file XLSX
+Lúc này, bộ dữ liệu huấn luyện đã được hoàn tất với (X_reduced, y_augmented). Để tiến hành huấn luyện, chia bộ dữ liệu trên thành ba tập Train/Validation/Test với tỉ lệ xấp xỉ 70%/15%/15%. Tiếp đó, đưa tập Train vào Stratified CV - Stratified Cross Validation rồi chia thành 5 Folds - 4 tập Train nhỏ và 1 tập Validation nhỏ (tỉ lệ nhãn của mỗi Fold cân bằng với tỉ lệ nhãn toàn bộ tập Train) để đánh giá sự ổn định của tập dữ liệu huấn luyện.
 
----
+Sau đó ta sẽ tinh chỉnh các siêu tham số (Hyperparameters) của mô hình SVM như:
 
-## Pipeline xử lý
+1. Hệ số phạt `C`: [0.01, 0.1, 1, 10, 100]
+2. Hệ số ảnh hưởng `gamma`: [**scale**, 0.001, 0.01, 0.1, 1]
+3. Hàm hạt nhân `kernel`: **rbf** (Radial Basis Function)
 
-1. **Tiền xử lý**
+Ở đây có tổ hợp 25 tổ hợp của bộ siêu tham số, cùng với 5 Folds dữ liệu nên sẽ có tất cả 125 lần huấn luyện được diễn ra (với mỗi tổ hợp thì ta sẽ huấn luyện mô hình 5 lần ứng với 5 Folds). Việc tinh chỉnh sẽ được thực hiện bởi GridSearchCV để tìm ra siêu tham số tốt nhất dành cho mô hình học máy SVM, phù hợp cho bài toán phân loại (Classification).
 
-   - Gộp 35 file → `merged_wind_turbine_data.csv`
-   - Chuẩn hóa cột (`Time`, `Amplitude`)
-   - Trích xuất `wind_speed` từ tên file
+Cuối cùng, khi đã có tham số tốt nhất, ta sẽ huấn luyện lại mô hình với toàn bộ tập Train, rồi tiến hành đánh giá mô hình thông qua tập Validation và tập Test để xem xét hiệu suất của mô hình.
 
-2. **Tái cấu trúc**
+**Ghi chú:** Đây chỉ là dự án thiết kế mô hình học máy, vậy nên trong tương lai có thể sẽ được phát triển thành 1 dự án ứng dụng mô hình trong thực nghiệm hay thiết kế dạng Web App.
 
-   - Chia thành các đoạn **500 mẫu** (mỗi đoạn = 1 mẫu huấn luyện)
+## BỘ DỮ LIỆU
 
-3. **Tăng cường dữ liệu (Data Augmentation ×50)**
+Tập dữ liệu thô (Raw Data) của dự án này có tên là **Wind Turbine Blades Fault Diagnosis based on Vibration Dataset Analysis**, được lấy từ trang Web ScienceDirect: https://www.sciencedirect.com/science/article/pii/S2352340923005152
 
-   - Thêm nhiễu Gaussian
-   - Dịch chuyển thời gian
-   - Phóng to/thu nhỏ biên độ
-   - Đảo ngược tín hiệu
+Đây là đường dẫn đến một bài báo khoa học được đăng tạp chí Data in Brief, nói về một Dataset rung động từ cánh Tuabin gió bị lỗi dưới nhiều điều kiện khác nhau. Mục đích của bài báo trên là hỗ trợ phát triển và kiểm thử các phương pháp giám sát tình trạng và chẩn đoán lỗi trong Tuabin gió bằng cách phân tích tín hiệu rung.
 
-4. **Trích xuất đặc trưng (13 đặc trưng)**  
-   | Nhóm | Đặc trưng |
-   |------|----------|
-   | **Thời gian** | mean, std, max, min, skew, kurtosis, wind_speed mean/std, variation ratio |
-   | **Tần số** | peak frequency, spectral energy, spectral entropy |
+Nơi lưu trữ Dataset đó: https://data.mendeley.com/datasets/5d7vbdp8f7/4.
+Thông tin mô tả của Dataset: Gồm 35 Files định dạng csv/xlsx chứa thông tin về tín hiệu rung động đơn trục (Uniaxial Vibration) đối với 5 tình trạng cánh quạt Tuabin gió:
 
-5. **Chuẩn hóa + PCA**
+1. Healthy
+2. Erosion of the Blade Surface
+3. Cracked Blades
+4. Mass Imbalance
+5. Twist Blade Fault
 
-   - `StandardScaler`
-   - `PCA` giữ **95% phương sai**
+Mỗi tình trạng của cánh quạt sẽ được thu thập với các mức tốc độ gió (Wind Speed) khác nhau: 1.3 m/s, 2.0 m/s, 2.1 m/s, ...
 
-6. **Huấn luyện SVM-RBF**
-   - `GridSearchCV` với `C`, `gamma`
-   - `StratifiedKFold` (chỉ dùng fold hợp lệ)
+Trong từng File, dữ liệu tín hiệu rung động sẽ gồm có 500 mẫu, với tần số lấy mẫu (Sampling Rate) là 1 hHz và sẽ chứa 2 cột thuộc tính chính (các cột này sẽ có một số biến thể do chưa tiền xử lý):
 
----
+1. Time (s): Thời gian lấy mẫu.
+2. Amplitude (V hoặc g): Biên độ tín hiệu rung động.
 
-## Kết quả mô hình (SVM-RBF)
+Theo thông số kỹ thuật của cảm biến PCB Piezotronics 352C65 trong bài báo khoa học phía trên, độ nhạy của cảm biến xấp xỉ 100 mV/g, do đó tín hiệu điện áp thu được có thể quy đổi sang gia tốc theo quy ước 1 V ≈ 10 g (với 1 g = 9.80665 m/s²).
 
-| Chỉ số                  | Giá trị            |
-| ----------------------- | ------------------ |
-| **Training Accuracy**   | **96.43% ± 0.40%** |
-| **Validation Accuracy** | **91.71% ± 1.42%** |
+## CẤU TRÚC MÃ NGUỒN
 
-> **Mô hình ổn định, không overfit**, khoảng cách train/val ~5% là hợp lý với dữ liệu thực tế.
+[data](data/) : Chứa các tập dữ liệu thô và sạch
+[model](model/) : Chứa mô hình và các thành phần được đóng gói
+[notebook](notebook/) : Chứa các Notebook xử lý tập dữ liệu và mô hình
+[picture](picture/) : Chứa danh mục hình ảnh
 
----
+## CÔNG NGHỆ TIÊU BIỂU
 
-## Biểu đồ đánh giá
+Một số công nghệ được áp dụng trong dự án: Python, NumPy, Pandas, Scikit-learn (SVM, PCA, GridSearchCV), SciPy, Matplotlib, Seaborn, Joblib
 
-### Learning Curve (Training vs Validation Accuracy)
+## MỘT SỐ HÌNH ẢNH
 
-![Learning Curve](image/training_vs_validation_accuracy.png)
+![Project Pipeline](picture/support_vector_machine.png)
+_Pipeline tổng thể của dự án._
 
-### Ma trận nhầm lẫn
-
-![Confusion Matrix](image/confusion_matrix.png)
-
----
-
-## Cách huấn luyện lại
-
-1. Đặt 35 file vào `data/raw-data/`
-2. Chạy notebook theo thứ tự:
-   ```bash
-   jupyter notebook
-   ```
-3. File kết quả sẽ tự động lưu vào `data/preprocessed-data/`
+![Confusion Matrix](picture/confusion_matrix.png)
+_Ma trận nhầm lẫn của mô hình SVM._
