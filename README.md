@@ -8,13 +8,13 @@ Wind Turbine Blade State Prediction Model
 
 <hr>
 
-# MỤC LỤC
+## MỤC LỤC
 
-- [Giới thiệu tổng quát](#giới-thiệu-tổng-quát)
-- [Bộ dữ liệu](#bộ-dữ-liệu)
-- [Cấu trúc mã nguồn](#cấu-trúc-mã-nguồn)
-- [Công nghệ tiêu biểu](#công-nghệ-tiêu-biểu)
-- [Một số hình ảnh](#một-số-hình-ảnh)
+- [GIỚI THIỆU TỔNG QUÁT](#giới-thiệu-tổng-quát)
+- [BỘ DỮ LIỆU](#bộ-dữ-liệu)
+- [CẤU TRÚC MÃ NGUỒN](#cấu-trúc-mã-nguồn)
+- [CÔNG NGHỆ TIÊU BIỂU](#công-nghệ-tiêu-biểu)
+- [MỘT SỐ HÌNH ẢNH](#một-số-hình-ảnh)
 
 ## GIỚI THIỆU TỔNG QUÁT
 
@@ -74,7 +74,7 @@ Cuối cùng, khi đã có tham số tối ưu, GridSearchCV sẽ tự huấn lu
 
 ## BỘ DỮ LIỆU
 
-Bài báo khoa học: https://www.sciencedirect.com/science/article/pii/S2352340923005152
+Bài báo khoa học: https://www.sciencedirect.com/science/article/pii/S2352340923005152<br>
 Đường dẫn Dataset: https://data.mendeley.com/datasets/5d7vbdp8f7/4
 
 Tập dữ liệu thô (Raw Data) của dự án này có tên là **Wind Turbine Blades Fault Diagnosis based on Vibration Dataset Analysis**, được lấy từ trang Web ScienceDirect.
@@ -100,10 +100,10 @@ Theo thông số kỹ thuật của cảm biến **PCB Piezotronics 352C65** tro
 
 ## CẤU TRÚC MÃ NGUỒN
 
-[data](data/) : Chứa các tập dữ liệu thô và sạch<br>
-[model](model/) : Chứa mô hình và các thành phần được đóng gói<br>
-[notebook](notebook/) : Chứa các Notebook xử lý tập dữ liệu và mô hình<br>
-[picture](picture/) : Chứa danh mục hình ảnh
+[data](data/) : Chứa các tập dữ liệu thô và sạch.<br>
+[model](model/) : Chứa mô hình và các thành phần được đóng gói.<br>
+[notebook](notebook/) : Chứa các Notebook xử lý tập dữ liệu và mô hình.<br>
+[picture](picture/) : Chứa danh mục hình ảnh.
 
 ## CÔNG NGHỆ TIÊU BIỂU
 
@@ -112,7 +112,7 @@ Một số công nghệ được áp dụng trong dự án: Python, NumPy, Panda
 ## MỘT SỐ HÌNH ẢNH
 
 <p align="center">
-  <img src="picture/support_vector_machine.png" width="600">
+  <img src="picture/support_vector_machine.png" width="800">
 </p>
 
 <p align="center"><i>Pipeline tổng thể của dự án.</i></p>
@@ -120,7 +120,7 @@ Một số công nghệ được áp dụng trong dự án: Python, NumPy, Panda
 <br>
 
 <p align="center">
-  <img src="picture/confusion_matrix.png" width="500">
+  <img src="picture/confusion_matrix.png" width="800">
 </p>
 
 <p align="center"><i>Ma trận nhầm lẫn của mô hình.</i></p>
